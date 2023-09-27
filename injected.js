@@ -54,7 +54,7 @@ async function replaceInputs(data, method, cipher) {
                 data.set(pair[0], uniqueDecryptString(pair[1], method, cipher));  //replace value with decrypted string
         }
         // Check if data exists, is a string and is not empty
-    } else if (data && typeof data === 'string' && data.trim() !== "") { //????????????????????
+    } else if (data && typeof data === 'string' && data.trim() !== "") { 
         try {
             // Try to parse the data as JSON
             var jsonBody = JSON.parse(data);
