@@ -1,0 +1,45 @@
+{
+  "manifest_version": 2,
+  "name": "SecureForms",
+  "description": "Protection from leaky forms",
+  "version": "1.0",
+  "permissions": [
+    "activeTab",
+    "webRequest",
+    "webRequestBlocking",
+    "storage",
+    "tabs",
+    "https://*/*",
+    "http://*/*"
+  ],
+  "browser_action": {
+    "default_popup": "index.html"
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "web_accessible_resources": [
+    "virtual-keyboard.html",
+    "jssalsa20.js",
+    "injected.js",
+    "aes-js.js"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "./dist/bundle.js"
+      ]
+    }
+  ],
+  "externally_connectable": {
+    "ids": ["gckojjjdhfedindcgikpdjgegmhpfdcj"],
+    "matches": [
+      "*://localhost/*"
+    ]
+  }
+}

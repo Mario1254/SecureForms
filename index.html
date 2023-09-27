@@ -1,0 +1,206 @@
+<!--<!DOCTYPE html>
+<html>
+<head>
+  <title>Extension Popup</title>
+  <style>
+ body {
+      width: 400px;
+      height: 600px;
+      background-color: #8a8db8;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      font-family: Monospace, monospace;
+    }   
+    h1 {
+        margin-top: 30px;
+        font-size: 24px;
+    }
+    .button-container {
+        display: flex;
+        flex-direction: column; /* Display buttons in a column */
+        align-items: flex-start; /* Align buttons to the left */
+        margin-top: 20px;
+    }
+    .button {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 2px solid black;
+            background-color: #ab8bbb;
+            color: #000000;
+            cursor: pointer;
+            margin-bottom: 10px;
+            width: 40%;
+            margin-bottom: 5px;
+        }
+        .divider {
+            margin: 20px 0;
+            border-bottom: 1px solid #ccc;
+        }
+        .textbox {
+            width: 200px;
+            padding: 5px;
+        }
+  </style>
+</head>
+<body persist="true">
+    <h1>Method 1</h1>
+    <div class="button-container">
+        <button class="button" id="encryptButton">Encryption</button>
+        <button class="button" id="enable">Enable</button>
+        <button class="button" id="sendDataButton">Send data button</button>       
+    </div>
+<h3>Decrypted Textboxes</h3>
+<input type="text" id="decryptedTextbox1" class="textbox" readonly>
+<input type="text" id="decryptedTextbox2" class="textbox" readonly>
+
+    <div class="divider"></div>
+    <h1>Method 2</h1>
+    <button class="button">Send to Buffer</button>
+
+
+    <script src="./popup.js"></script>
+    <script type="module" src="./dist/bundle.js"></script>
+    <div>
+        Encrypted Value: <span id="encryptedOutput"></span>
+    </div>
+</body>
+</html>
+-->
+
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Extension Popup</title>
+  <!-- Include Bootstrap CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      width: 400px;
+      height: 600px;
+      background-color: #8a8db8;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      font-family: Monospace, monospace;
+    }
+
+    h1 {
+      margin-top: 20px;
+      font-size: 24px;
+    }
+
+    .button-container {
+      margin-top: 10px;
+    }
+
+    .btn {
+      width: 100%;
+      margin-bottom: 5px;
+      background-color: #ab8bbb;
+      color: #000000;
+      border: 2px solid black;
+    }
+
+    .divider {
+      margin: 20px 0;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .textbox {
+      width: 40%;
+      padding: 5px;
+      margin: 0 auto;
+    }
+
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      font-family: Monospace, monospace;
+    }
+
+    .btn-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    th,
+    td {
+      padding: 10px;
+      text-align: center;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+
+    #viewCapturedData {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body persist="true">
+  <div class="container">
+    <h1 class="mt-4 text-center">Encryption Method</h3>
+      <button id="encryption" class="btn">None</button>
+      <div class="divider"></div>
+      <h3 class="mt-4 text-center">Interception Method</h3>
+      <button class="btn btn-primary" id="encryptSalsa">Encrypt</button>
+      <div style="display: flex; justify-content: space-around;">
+        <div>
+          <h4 class="mt-4 text-center">Salsa20</h4>
+          <button class="btn btn-danger" id="decryptSalsa">Decrypt</button>
+        </div>
+        <div>
+          <h4 class="mt-4 text-center">AES</h4>
+          <button class="btn btn-danger" id="decryptCTR">Decrypt</button>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <h3 class="mt-4 text-center">Actual Inputs</h3>
+      <div class="row mt-3 justify-content-center">
+        <input type="text" id="decryptedTextbox1" class="col-5 form-control mb-2 textbox" placeholder="Username" readonly>
+        <input type="text" id="decryptedTextbox2" class="col-5 form-control mb-2 textbox" placeholder="Password" readonly>
+        <button id="viewCapturedData" class="btn col-10">View Captured Data</button>
+      </div>
+      <div class="divider"></div>
+      <h3 class="mt-4 text-center">Storage Method</h3>
+      <button id="startMethod2" class="btn">Start Listening</button>
+      <button id="setToStorageButton" class="btn">Use Storage</button>
+
+      <table>
+        <tr>
+          <td colspan="2"><button class="btn btn-primary" id="encryptSalsaM2">Encrypt using Salsa20</button></td>
+          <th colspan="1"></th> <!-- Empty cell for spacing -->
+          <th colspan="1"></th> <!-- Empty cell for spacing -->
+          <th colspan="1"></th> <!-- Empty cell for spacing -->
+          <td colspan="2"><button class="btn btn-primary" id="encryptCTRM2">Encrypt using AES CTR</button></td>
+        </tr>
+        <tr>
+          <td colspan="2"><button class="btn btn-primary" id="decryptSalsaM2">Decrypt using Salsa20</button></td>
+          <th colspan="1"></th> <!-- Empty cell for spacing -->
+          <th colspan="1"></th> <!-- Empty cell for spacing -->
+          <th colspan="1"></th> <!-- Empty cell for spacing -->
+          <td colspan="2"><button class="btn btn-primary" id="decryptCTRM2">Decrypt using AES CTR</button></td>
+        </tr>
+      </table>
+
+      <button id="keyboardButton" class="btn btn-primary">Keyboard</button>
+      <iframe id="virtual-keyboard" src="virtual-keyboard.html" style="display: none;"></iframe>
+  </div>
+  <script src="./popup.js"></script>
+  <script type="module" src="./dist/bundle.js"></script>
+</body>
+
+</html>

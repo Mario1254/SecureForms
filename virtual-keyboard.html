@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Virtual Keyboard</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+    
+            .floating-toolbar {
+                position: fixed;
+                bottom: 10px;
+                right: 10px;
+                background-color: #0e0c0c;
+                border: 1px solid #030101;
+                border-radius: 5px;
+                padding: 10px;
+            }
+    
+            .keyboard-key {
+                font-size: 16px;
+                padding: 5px 10px;
+                margin: 5px;
+                background-color: #d652a3;
+                border: 1px solid #d649a7;
+                border-radius: 3px;
+                cursor: default;
+            }
+
+        </style>
+</head>
+<body>
+    <div id="virtual-keyboard" class="floating-toolbar">
+        <div class="row">
+         <button class="keyboard-key">1</button>
+         <button class="keyboard-key">2</button>
+         <button class="keyboard-key">3</button>
+         <button class="keyboard-key">4</button>
+         <button class="keyboard-key">5</button>
+         <button class="keyboard-key">6</button>
+         <button class="keyboard-key">7</button>
+         <button class="keyboard-key">8</button>
+         <button class="keyboard-key">9</button>
+         <button class="keyboard-key">0</button>
+        </div>
+        <div class="row">
+          <button class="keyboard-key">q</button>
+         <button class="keyboard-key">w</button>
+         <button class="keyboard-key">e</button>
+         <button class="keyboard-key">r</button>
+         <button class="keyboard-key">t</button>
+         <button class="keyboard-key">y</button>
+         <button class="keyboard-key">u</button>
+         <button class="keyboard-key">i</button>
+         <button class="keyboard-key">o</button>
+         <button class="keyboard-key">p</button>
+        </div>
+        
+        <div class="row"> 
+            <button class="keyboard-key">a</button>
+            <button class="keyboard-key">s</button>
+            <button class="keyboard-key">d</button>
+            <button class="keyboard-key">f</button>
+            <button class="keyboard-key">g</button>
+            <button class="keyboard-key">h</button>
+            <button class="keyboard-key">j</button>
+            <button class="keyboard-key">k</button>
+            <button class="keyboard-key">l</button>
+        </div>
+
+        <div class="row"> 
+         <button class="keyboard-key">z</button>
+         <button class="keyboard-key">x</button>
+         <button class="keyboard-key">c</button>
+         <button class="keyboard-key">v</button>
+         <button class="keyboard-key">b</button>
+         <button class="keyboard-key">n</button>
+         <button class="keyboard-key">m</button>
+        </div>
+    </div>
+</body>
+</html>
