@@ -1144,8 +1144,8 @@ var decrCipher = new (js_salsa20__WEBPACK_IMPORTED_MODULE_0___default())(key, no
 
 //ENCRYPTION CTR
 // Generate random key and IV (nonce) using the Web Crypto API
-//const keyCTR = new Uint8Array(16); // Create a Uint8Array of length 16 bytes (128 bits)
-var keyCTR = new Uint8Array(32); // 16 bytes (256 bits)
+var keyCTR = new Uint8Array(16); // 16 bytes (128 bits)
+//const keyCTR = new Uint8Array(32); // 32 bytes (256 bits)
 var iv = new Uint8Array(16); // 16 bytes (128 bits)
 crypto.getRandomValues(keyCTR);
 crypto.getRandomValues(iv);
@@ -1172,7 +1172,7 @@ function encryptChar(inputChar) {
       var encryptedByte = encrCipher.encrypt(utf8Array);
       endTime = performance.now(); // End timer
       timeTaken = endTime - startTime; // Calculate time taken in milliseconds
-      console.log('Time taken for encryption (ms):', timeTaken.toFixed(2));
+      console.log('Time taken for encryption (ms):', timeTaken.toFixed(8));
 
       // Convert the encrypted bytes to a hex string
       encryptedHex = Array.from(encryptedByte).map(function (_byte) {
@@ -1321,6 +1321,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 // Initialize separate arrays for each textbox
 var capturedInputs = {};
 var forms = document.querySelectorAll('form');
+//console.log(forms);
 
 // Variable to track if the user is typing for the first time
 var isTyping = false;
@@ -1341,15 +1342,17 @@ function handleKeyPress(event) {
   forms.forEach(function (form) {
     var _loop = function _loop() {
       var element = form.elements[index];
+      // Check if the current element is an input field and if it's the target of the current event (keypress)
       if (element instanceof HTMLInputElement && event.target === element) {
         var identifier = form.id + "#" + element.id;
-        typeof capturedInputs[identifier] === 'undefined' ? capturedInputs[identifier] = [] : null;
+        typeof capturedInputs[identifier] === 'undefined' ? capturedInputs[identifier] = [] : null; // Initialize the storage array for this input field if it hasn't been created yet
         if (inputChar !== 'Backspace') {
           capturedInputs[identifier].push(inputChar);
           console.log('Input captured and stored:', inputChar);
         } else {
-          capturedInputs[identifier].pop();
+          capturedInputs[identifier].pop(); // If 'Backspace' was pressed, remove the last character from the storage array
         }
+
         chrome.storage.local.set({
           formsData: capturedInputs
         }, function () {
@@ -1357,6 +1360,7 @@ function handleKeyPress(event) {
         });
       }
     };
+    //go through each elemnt inside the form
     for (var index = 0; index < form.elements.length; index++) {
       _loop();
     }
@@ -1370,108 +1374,6 @@ function handleKeyPress(event) {
     })); // Trigger an input event
   }
 }
-
-// ////////////////////////////////////////////////////////////////////////////////////////////
-// //METHOD 2
-// // Initialize separate arrays for each textbox
-// let capturedInputsTextbox1 = [];
-// let capturedInputsTextbox2 = [];
-
-// const textboxes = document.querySelectorAll('input[type="text"], input[type="password"]');
-
-// // Variable to track if the user is typing for the first time
-// let isTyping = false;
-
-// // Function to handle key presses and store captured input
-// function handleKeyPress(event) {
-//   event.preventDefault(); // Prevent the default character input
-//   const inputChar = event.key; // Get the pressed key
-
-//   // Check if this is the first keypress
-//   if (!isTyping) {
-//     // Clear the entire storage when the user starts typing for the first time
-//     chrome.storage.local.clear(function () {
-//       console.log('Storage cleared');
-//     });
-//     isTyping = true;
-//   }
-
-//   if (inputChar === 'Backspace') {
-//     // Handle Backspace key press: remove the last character from the appropriate array
-//     const textboxIndex = Array.from(textboxes).indexOf(event.target);
-//     if (textboxIndex === 0) {
-//       capturedInputsTextbox1.pop(); // Remove the last character
-//       // Update the array in storage
-//       updateStorage('capturedInputsTextbox1', capturedInputsTextbox1);
-//     } else if (textboxIndex === 1) {
-//       capturedInputsTextbox2.pop(); // Remove the last character
-//       // Update the array in storage
-//       updateStorage('capturedInputsTextbox2', capturedInputsTextbox2);
-//     }
-//   } else {
-
-//     // Determine which textbox the input belongs to based on its position or any other criteria
-//     const textboxIndex = Array.from(textboxes).indexOf(event.target);
-
-//     if (textboxIndex === 0) {
-//       capturedInputsTextbox1.push(inputChar);
-//       // Update the array in storage
-//     } else if (textboxIndex === 1) {
-//       capturedInputsTextbox2.push(inputChar);
-//       // Update the array in storage
-//     }
-//   }
-//   // Store the captured input in your extension's storage
-//   storeCapturedInput(inputChar);
-
-//   // Clear the textbox value to prevent data display
-//   if (event.target) {
-//     event.target.value = 'a';
-//     event.target.dispatchEvent(new Event('input', { bubbles: true })); // Trigger an input event
-// }
-// }
-
-// // Function to update the array in extension's storage
-// function updateStorage(storageKey, updatedArray) {
-//   const storageObject = {};
-//   storageObject[storageKey] = updatedArray;
-
-//   chrome.storage.local.set(storageObject, function () {
-//     console.log('Updated array in storage:', storageKey, updatedArray);
-//   });
-// }
-
-// // Function to store captured input in extension's storage
-// function storeCapturedInput(inputChar) {
-//   // store the captured input in your extension's storage
-//   const textboxIndex = Array.from(textboxes).indexOf(event.target);
-
-//   if (inputChar !== 'Backspace') { // Skip storing "Backspace"
-//     if (textboxIndex === 0) {
-//       chrome.storage.local.get({ capturedInputsTextbox1: [] }, function (result) {
-//         const capturedInputs = result.capturedInputsTextbox1;
-//         capturedInputs.push(inputChar);
-
-//         // Update the 'capturedInputsTextbox1' array in local storage
-//         chrome.storage.local.set({ capturedInputsTextbox1: capturedInputs }, function () {
-//           console.log('Input captured and stored:', inputChar);
-//           console.log('Updated capturedInputsTextbox1 array:', capturedInputs);
-//         });
-//       });
-//     } else if (textboxIndex === 1) {
-//       chrome.storage.local.get({ capturedInputsTextbox2: [] }, function (result) {
-//         const capturedInputs = result.capturedInputsTextbox2;
-//         capturedInputs.push(inputChar);
-
-//         // Update the 'capturedInputsTextbox2' array in local storage
-//         chrome.storage.local.set({ capturedInputsTextbox2: capturedInputs }, function () {
-//           console.log('Input captured and stored:', inputChar);
-//           console.log('Updated capturedInputsTextbox2 array:', capturedInputs);
-//         });
-//       });
-//     }
-//   }
-// }
 
 function uint8ArrayToBase64(uint8Array) {
   return btoa(String.fromCharCode.apply(String, _toConsumableArray(uint8Array)));
@@ -1501,7 +1403,7 @@ function encryptSalsaMethod2() {
     chrome.storage.local.set({
       formsData: (_formsData = {}, _defineProperty(_formsData, 'loginForm#username', encryptedTextbox1Base64), _defineProperty(_formsData, 'loginForm#password', encryptedTextbox2Base64), _formsData)
     }, function () {
-      console.log('Data encrypted and stored back');
+      console.log('Encrypted using Salsa20:');
       console.log(encryptedTextbox1Base64, encryptedTextbox2Base64);
     });
   });
@@ -1529,7 +1431,7 @@ function encryptCTRMethod2() {
     chrome.storage.local.set({
       formsData: (_formsData2 = {}, _defineProperty(_formsData2, 'loginForm#username', encryptedText1), _defineProperty(_formsData2, 'loginForm#password', encryptedText2), _formsData2)
     }, function () {
-      console.log('Data encrypted with AES CTR and stored back');
+      console.log('Encrypted using AES-CTR');
       console.log(encryptedText1, encryptedText2);
     });
   });
@@ -1555,7 +1457,7 @@ function decryptSalsaMethod2() {
     chrome.storage.local.set({
       formsData: (_formsData3 = {}, _defineProperty(_formsData3, 'loginForm#username', Array.from(decryptedTextbox1String)), _defineProperty(_formsData3, 'loginForm#password', Array.from(decryptedTextbox2String)), _formsData3)
     }, function () {
-      console.log('Data decrypted and stored back');
+      console.log('Decrypted using Salsa20:');
       console.log(decryptedTextbox1String, decryptedTextbox2String);
     });
   });
@@ -1583,7 +1485,7 @@ function decryptCTRMethod2() {
     chrome.storage.local.set({
       formsData: (_formsData4 = {}, _defineProperty(_formsData4, 'loginForm#username', Array.from(decryptedText1)), _defineProperty(_formsData4, 'loginForm#password', Array.from(decryptedText2)), _formsData4)
     }, function () {
-      console.log('Data decrypted with AES CTR and stored back');
+      console.log('Decrypted using AES-CTR:');
       console.log(decryptedText1, decryptedText2);
     });
   });
@@ -1638,7 +1540,7 @@ function injectVirtualKeyboard() {
     }).then(function (html) {
       shadow.innerHTML = html;
       addKeyboardClickHandlers(shadow); // Add click handlers after injecting the keyboard
-      preventEventPropagation(shadow); // Prevent events from propagating to the webpage
+      //  preventEventPropagation(shadow); // Prevent events from propagating to the webpage
     });
   } else {
     // Toggle visibility if the keyboard is already present in the page
@@ -1652,7 +1554,8 @@ function addKeyboardClickHandlers(shadow) {
   keys.forEach(function (key) {
     key.addEventListener('click', function (event) {
       event.preventDefault();
-      event.stopPropagation();
+      event.stopPropagation(); // Prevent events from propagating to the webpage
+
       if (focusedInput) {
         var _char2 = event.target.textContent;
         var encryptedValue = focusedInput.value;
@@ -1698,29 +1601,13 @@ function shuffleKeyboardKeys(shadow) {
     });
   });
 }
-function preventEventPropagation(shadow) {
-  shadow.querySelector('#virtual-keyboard').addEventListener('click', function (event) {
-    event.stopPropagation();
-  });
-}
+
+// function preventEventPropagation(shadow) {
+//   shadow.querySelector('#virtual-keyboard').addEventListener('click', function (event) {
+//     event.stopPropagation();
+//   });
+// }
 //////////////////////////////////////////////////////////////////////////////////////
-// chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-//   if (message.action === 'serverResponse') {
-//     console.log('Server response received:', message.data);
-
-//     const responseDiv = document.getElementById('serverResponse');
-//     if (responseDiv) {
-//       responseDiv.textContent = JSON.stringify(message.data);
-//     } else {
-//       // If there is no element with id 'serverResponse', you might want to create one:
-//       const newDiv = document.createElement('div');
-//       newDiv.id = 'serverResponse';
-//       newDiv.textContent = JSON.stringify(message.data);
-//       document.body.appendChild(newDiv);
-//     }
-//   }
-// });
-
 // Create a div and attach a shadow root to isolate the scripts that will be injected
 var div = document.createElement('div');
 var shadowRoot = div.attachShadow({

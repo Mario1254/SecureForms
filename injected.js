@@ -1,4 +1,4 @@
-// Function to decrypt a string based on the method passed in (either 'Salsa20' or 'AES')
+// function to decrypt data based on the method 
 function uniqueDecryptString(string, method, cipher) {
     let decryptedValue = '';
     switch (method) {
@@ -8,21 +8,21 @@ function uniqueDecryptString(string, method, cipher) {
 
                 const byteValue = parseInt(hexByte, 16);
                 const encryptedUint8Array = new Uint8Array([byteValue]);
-                // Decrypt the single byte
+                // decrypt the byte
                 const decryptedBytes = cipher.decrypt(encryptedUint8Array);
-                // Convert decrypted byte to a UTF-8 string
+                // convert decrypted byte to a utf8 
                 const decryptedChar = new TextDecoder().decode(new Uint8Array(decryptedBytes));
                 decryptedValue += decryptedChar;
             }
             return decryptedValue;
         case 'AES':
             for (let i = 0; i < string.length; i += 2) {
-                // Get the hex byte from the encrypted value
+                // get the hex byte from the encrypted value
                 const hexByte = string.substr(i, 2);
                 const byteValue = parseInt(hexByte, 16);
-                // Decrypt the byte using AES-CTR
+                // decrypt the byte using AES-CTR
                 const decryptedBytes = cipher.decrypt([byteValue]);
-                // Convert decrypted byte to UTF-8 character
+                // convert decrypted byte to utf8
                 const decryptedChar = aesjs.utils.utf8.fromBytes(decryptedBytes);
                 decryptedValue += decryptedChar;
             }
@@ -32,6 +32,7 @@ function uniqueDecryptString(string, method, cipher) {
 
 async function getFromStorage(inputLabel) {
     return new Promise((resolve, reject) => {
+        // Send a message to the background.js, identified by ID of extension
         chrome.runtime.sendMessage('gckojjjdhfedindcgikpdjgegmhpfdcj', { action: "getFromStorage", field: inputLabel }, (response) => {
             if (chrome.runtime.lastError) {
                 reject(new Error(chrome.runtime.lastError));
@@ -44,19 +45,18 @@ async function getFromStorage(inputLabel) {
 }
 
 async function replaceInputs(data, method, cipher) {
-    // Check if data exists and is an instance of FormData
+    // check if data exists and is an instance of FormData
     if (data && data instanceof FormData) {
-        // Iterate through each key-value pair in the FormData
+        // iterate through each key-value pair in the FormData
         for (var pair of data.entries()) {
             if (method === 'storage')
-                data.set(pair[0], await getFromStorage(pair[0])); // If method is 'storage', replace value with data from storage
+                data.set(pair[0], await getFromStorage(pair[0])); // replace value with data from storage
             else
                 data.set(pair[0], uniqueDecryptString(pair[1], method, cipher));  //replace value with decrypted string
         }
-        // Check if data exists, is a string and is not empty
+        // check if data exists, is a string and is not empty
     } else if (data && typeof data === 'string' && data.trim() !== "") { 
         try {
-            // Try to parse the data as JSON
             var jsonBody = JSON.parse(data);
             // Iterate through each key-value pair in the JSON object
             for (var key in jsonBody)
@@ -82,15 +82,18 @@ function uniqueOverrideRequests(method, keys) {
 
     switch (method) {
         case 'Salsa20':
+            // Initialize the Salsa20 cipher with the provided key and nonce
             cipher = new JSSalsa20(new Uint8Array(keys.key), new Uint8Array(keys.nonce));
             break;
         case 'AES':
+            // Initialize the AES-CTR cipher with the provided key and IV
             cipher = new aesjs.ModeOfOperation.ctr(keys.key, new aesjs.Counter(keys.iv));
             break;
         case 'storage':
             cipher = null;
             break;
         default:
+            //default request with original functions
             cipher = null;
             XMLHttpRequest.prototype.open = originalOpen;
             XMLHttpRequest.prototype.send = originalSend;
@@ -98,7 +101,7 @@ function uniqueOverrideRequests(method, keys) {
             return;
     }
 
-    // Override the open method of XMLHttpRequest to log the arguments and add a listener to log state changes
+    // Override the open method of XMLHttpRequest to log the arguments 
     XMLHttpRequest.prototype.open = function () {
         console.log('Intercepted open arguments:', arguments);
         this.addEventListener('readystatechange', async function () {

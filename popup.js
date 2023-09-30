@@ -1,9 +1,6 @@
-// Save the popup window object
 let popupWindow = null;
-// Flag to indicate whether listening is active
-let listening = false;
 
-// Function to handle the "Encryption" button click SALSA 
+// Function for Encryption button click 
 function handleEncryptionButtonClick() {
   console.log('Encryption button clicked');
   // Send a message to the content script to start encryption
@@ -12,16 +9,7 @@ function handleEncryptionButtonClick() {
   });
 }
 
-// // Function to handle the "Encryption" button click CTR
-// function EncryptionButtonClickWithCTR() {
-//   console.log('CTR Encryption button clicked');
-//   // Send a message to the content script to start encryption
-//   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-//     chrome.tabs.sendMessage(tabs[0].id, { action: 'startEncryptionWithCTR' });
-//   });
-// }
-
-// Function to handle messages from the content script
+// Function for the messages from script.js (content script)
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.action === 'startEncryption') {
     // Handle the encrypted text received from the content script
@@ -34,20 +22,20 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 });
 
 
-// Function to handle the "Decryption" button click
+// Function for the Decryption button click for Salsa
 function handleDecryptionButtonClick() {
   console.log('Decryption button clicked');
-  requestSent = false; // Reset the flag when the user wants to decrypt again
+  requestSent = false; // Reset the flag for a new decryption
   // Send a message to the content script to start decryption
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     chrome.tabs.sendMessage(tabs[0].id, { action: 'startDecryption' });
   });
 }
 
-// Function to handle the "Decryption" button click
+// Function for the Decryption button click for AES-CTR
 function DecryptionButtonClickWithCTR() {
   console.log('CTR Decryption button clicked');
-  requestSent = false; // Reset the flag when the user wants to decrypt again
+  requestSent = false; // Reset the flag for a new decryption
   // Send a message to the content script to start decryption
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     chrome.tabs.sendMessage(tabs[0].id, { action: 'startDecryptionWithCTR' });
@@ -58,29 +46,26 @@ function DecryptionButtonClickWithCTR() {
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.action === 'decryptionComplete' || message.action === 'decryptionCompleteCTR') {
-    // Listen for decryption completion message from content script
+    // Listen for the message from script.js
     document.getElementById('decryptedTextbox1').value = message.decryptedValues[0];
     document.getElementById('decryptedTextbox2').value = message.decryptedValues[1];
     console.log('Decrypted Text:', message.decryptedValues);
   } else if (message.action === 'inputCaptured') {
-    // Listen for messages from the content script
+    // Listen for messages from script.js
     console.log('Input captured:', message.inputChar);
-    // You can handle the captured input here as needed
   }
 });
 
 // Method 2
 function startListening() {
-  // Send a message to the content script to start listening to keystrokes
+  // Send a message to the script.js to start listening to keystrokes
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     chrome.tabs.sendMessage(tabs[0].id, { action: 'startListening' });
   });
 }
 
 
-
-//////////////////////////////////////////////////
-// Function to handle the "Keyboard" button click
+// Function for the Virtual Keyboard button click
 function handleKeyboardButtonClick() {
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     chrome.tabs.sendMessage(tabs[0].id, { action: 'showKeyboard' });
@@ -88,18 +73,18 @@ function handleKeyboardButtonClick() {
 }
 /////////////////////////////////////////////////
 
-// Add event listeners to the buttons
+// event listeners to the buttons
 document.addEventListener('DOMContentLoaded', function () {
-  const encryptButton = document.getElementById('encryptSalsa');
+  const encryptButton = document.getElementById('encryptSalsa'); // Encrypt button for both Salsa and AES
   encryptButton.addEventListener('click', handleEncryptionButtonClick);
 
-  const enableButton = document.getElementById('decryptSalsa');
+  const enableButton = document.getElementById('decryptSalsa'); // Decrypt for Salsa
   enableButton.addEventListener('click', handleDecryptionButtonClick);
 
-  const decryptButtonCTR = document.getElementById('decryptCTR');
+  const decryptButtonCTR = document.getElementById('decryptCTR'); // Decrypt for AES-CTR
   decryptButtonCTR.addEventListener('click', DecryptionButtonClickWithCTR);
 
-  document.getElementById('encryption').addEventListener('click', function (event) {
+  document.getElementById('encryption').addEventListener('click', function (event) { //toggle button
     console.log(document.getElementById('encryption').textContent);
     switch (document.getElementById('encryption').textContent) {
       case 'None':
@@ -140,31 +125,31 @@ document.addEventListener('DOMContentLoaded', function () {
   const startListeningButton = document.getElementById('startMethod2');
   startListeningButton.addEventListener('click', startListening);
 
-  document.getElementById('encryptSalsaM2').addEventListener('click', function () {
+  document.getElementById('encryptSalsaM2').addEventListener('click', function () { //Encryption in Method 2 with Salsa
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       chrome.tabs.sendMessage(tabs[0].id, { action: 'encryptSalsaMethod2' });
     });
   });
 
-  document.getElementById('encryptCTRM2').addEventListener('click', function () {
+  document.getElementById('encryptCTRM2').addEventListener('click', function () { //Encryption in Method 2 with AES-CTR
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       chrome.tabs.sendMessage(tabs[0].id, { action: 'encryptCTRMethod2' });
     });
   });
 
-  document.getElementById('decryptSalsaM2').addEventListener('click', function () {
+  document.getElementById('decryptSalsaM2').addEventListener('click', function () { //Decryption in Method 2 with Salsa
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       chrome.tabs.sendMessage(tabs[0].id, { action: 'decryptSalsaMethod2' });
     });
   });
 
-  document.getElementById('decryptCTRM2').addEventListener('click', function () {
+  document.getElementById('decryptCTRM2').addEventListener('click', function () { //Decryption in Method 2 with AES-CTR
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       chrome.tabs.sendMessage(tabs[0].id, { action: 'decryptCTRMethod2' });
     });
   });
 
-  document.getElementById('viewCapturedData').addEventListener('click', function () {
+  document.getElementById('viewCapturedData').addEventListener('click', function () { //View Captured Data Button click that places data from storage in textboxes
     // Retrieve the captured data from chrome.storage.local
     chrome.storage.local.get("formsData", function (result) {
       const formsData = result.formsData
@@ -181,8 +166,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  //////////////////////////////////////////
-  // Add an event listener to the "Keyboard" button to toggle the virtual keyboard
+  // Add an event listener to the Virtual Keyboard button to show the virtual keyboard
   document.getElementById('keyboardButton').addEventListener('click', handleKeyboardButtonClick);
 
 });
