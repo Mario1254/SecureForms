@@ -23,7 +23,7 @@ function uniqueDecryptString(string, method, cipher) {
                 // decrypt the byte using AES-CTR
                 const decryptedBytes = cipher.decrypt([byteValue]);
                 // convert decrypted byte to utf8
-                const decryptedChar = aesjs.utils.utf8.fromBytes(decryptedBytes);
+                const decryptedChar = aesjs.utils.utf8.fromBytes(decryptedBytes); // Moore R., 2018. Available at: https://github.com/ricmoo/aes-js 
                 decryptedValue += decryptedChar;
             }
             return decryptedValue;
@@ -83,11 +83,11 @@ function uniqueOverrideRequests(method, keys) {
     switch (method) {
         case 'Salsa20':
             // Initialize the Salsa20 cipher with the provided key and nonce
-            cipher = new JSSalsa20(new Uint8Array(keys.key), new Uint8Array(keys.nonce));
+            cipher = new JSSalsa20(new Uint8Array(keys.key), new Uint8Array(keys.nonce)); // Bubelich M., 2017. Available at: https://github.com/thesimj/js-salsa20
             break;
         case 'AES':
             // Initialize the AES-CTR cipher with the provided key and IV
-            cipher = new aesjs.ModeOfOperation.ctr(keys.key, new aesjs.Counter(keys.iv));
+            cipher = new aesjs.ModeOfOperation.ctr(keys.key, new aesjs.Counter(keys.iv)); // Moore R., 2018. Available at: https://github.com/ricmoo/aes-js 
             break;
         case 'storage':
             cipher = null;
@@ -101,6 +101,7 @@ function uniqueOverrideRequests(method, keys) {
             return;
     }
 
+//Hallak T. Stack overflow, Available at: https://stackoverflow.com/questions/16959359/intercept-xmlhttprequest-and-modify-responsetext
     // Override the open method of XMLHttpRequest to log the arguments 
     XMLHttpRequest.prototype.open = function () {
         console.log('Intercepted open arguments:', arguments);
@@ -111,14 +112,14 @@ function uniqueOverrideRequests(method, keys) {
     };
 
     // Override the send method of XMLHttpRequest to replace inputs in the data object before sending
-    XMLHttpRequest.prototype.send = async function (data) {  //cite
+    XMLHttpRequest.prototype.send = async function (data) {  
         console.log('Intercepted send arguments:', arguments);
         data = await replaceInputs(data, method, cipher);
         originalSend.apply(this, arguments);
     };
 
     // Override the fetch function to replace inputs in the body of the request before sending
-    window.fetch = function (input, init) {
+    window.fetch = function (input, init) {   //Subramanian H. Stack overflow, Available at: https://stackoverflow.com/questions/45425169/intercept-fetch-api-requests-and-responses-in-javascript
         return new Promise(async function (resolve, reject) {
             console.log('Intercepted fetch arguments:', arguments);
             init.body = await replaceInputs(init.body, method, cipher);

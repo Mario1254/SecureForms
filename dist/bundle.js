@@ -1132,26 +1132,26 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 
 
 
-// Initialize the Salsa20 cipher with random key and nonce
-var key = new Uint8Array(32); // Create a Uint8Array with 32 bytes (256 bits) for the key
-var nonce = new Uint8Array(8); // Create a Uint8Array with 8 bytes (64 bits) for the nonce
-// Generate random values for key and nonce using Web Crypto API
+// Key and nonce for Salsa20
+var key = new Uint8Array(32); // Uint8Array with 32 bytes (256 bits) for the key
+var nonce = new Uint8Array(8); //  Uint8Array with 8 bytes (64 bits) for the nonce
+// random values for key and nonce using Web Crypto API
 crypto.getRandomValues(key);
 crypto.getRandomValues(nonce);
-// Create instances of Salsa20 cipher for encryption and decryption
+// instances of Salsa20 cipher for encryption and decryption
 var encrCipher = new (js_salsa20__WEBPACK_IMPORTED_MODULE_0___default())(key, nonce);
 var decrCipher = new (js_salsa20__WEBPACK_IMPORTED_MODULE_0___default())(key, nonce);
 
-//ENCRYPTION CTR
-// Generate random key and IV (nonce) using the Web Crypto API
+//Key and IV for AES-CTR
 var keyCTR = new Uint8Array(16); // 16 bytes (128 bits)
 //const keyCTR = new Uint8Array(32); // 32 bytes (256 bits)
 var iv = new Uint8Array(16); // 16 bytes (128 bits)
+// random key and IV using the Web Crypto API
 crypto.getRandomValues(keyCTR);
 crypto.getRandomValues(iv);
 var counter = new (aes_js__WEBPACK_IMPORTED_MODULE_1___default().Counter)(iv);
-// Create the AES-CTR mode instance
-var aesCtr = new (aes_js__WEBPACK_IMPORTED_MODULE_1___default().ModeOfOperation).ctr(keyCTR, counter);
+var aesCtr = new (aes_js__WEBPACK_IMPORTED_MODULE_1___default().ModeOfOperation).ctr(keyCTR, counter); // AES-CTR mode instance
+
 var encryptionMethod = 'None';
 chrome.storage.local.set({
   method: encryptionMethod
@@ -1164,32 +1164,33 @@ function encryptChar(inputChar) {
   console.log('Typed Character:', inputChar);
   switch (encryptionMethod) {
     case 'Salsa20':
-      // Encode the input character to UTF-8 bytes using TextEncoder
+      // encryption when the toggle button is on Salsa20 
+      // Encode the input character to UTF-8 byte using TextEncoder
       var textEncoder = new TextEncoder();
-      var utf8Array = textEncoder.encode(inputChar);
+      var utf8Bytes = textEncoder.encode(inputChar);
       startTime = performance.now(); // Record start time
-      // Encrypt the UTF-8 bytes
-      var encryptedByte = encrCipher.encrypt(utf8Array);
-      endTime = performance.now(); // End timer
-      timeTaken = endTime - startTime; // Calculate time taken in milliseconds
-      console.log('Time taken for encryption (ms):', timeTaken.toFixed(8));
 
-      // Convert the encrypted bytes to a hex string
-      encryptedHex = Array.from(encryptedByte).map(function (_byte) {
+      var encryptedByte = encrCipher.encrypt(utf8Bytes); //Encrypt the byte
+
+      endTime = performance.now(); // End timer
+      timeTaken = endTime - startTime; // Calculate time  
+      console.log('Time taken for encryption (ms):', timeTaken.toFixed(2));
+      encryptedHex = Array.from(encryptedByte) // Convert the encrypted bytes to a hex 
+      .map(function (_byte) {
         return _byte.toString(16).padStart(2, '0');
       }).join('');
       break;
     case 'AES':
-      // Encrypt the character's bytes using AES-CTR
+      // Encode the input character to UTF-8 byte
       var inputBytes = aes_js__WEBPACK_IMPORTED_MODULE_1___default().utils.utf8.toBytes(inputChar);
       startTime = performance.now(); // Record start time
-      var encryptedBytes = aesCtr.encrypt(inputBytes);
-      endTime = performance.now(); // End timer
-      timeTaken = endTime - startTime; // Calculate time taken in milliseconds
-      console.log('Time taken for encryption (ms):', timeTaken.toFixed(2));
 
-      // Convert encrypted bytes to hex
-      encryptedHex = aes_js__WEBPACK_IMPORTED_MODULE_1___default().utils.hex.fromBytes(encryptedBytes);
+      var encryptedBytes = aesCtr.encrypt(inputBytes); //Encrypt the bye
+
+      endTime = performance.now(); // End timer
+      timeTaken = endTime - startTime; // Calculate time 
+      console.log('Time taken for encryption (ms):', timeTaken.toFixed(2));
+      encryptedHex = aes_js__WEBPACK_IMPORTED_MODULE_1___default().utils.hex.fromBytes(encryptedBytes); // Convert encrypted bytes to hex
       break;
     default:
       encryptedHex = inputChar;
@@ -1199,9 +1200,10 @@ function encryptChar(inputChar) {
 }
 function addCharToInput(textbox, event) {
   if (event.key === 'Backspace') {
-    textbox.value = textbox.value.slice(0, -2);
+    textbox.value = textbox.value.slice(0, -2); //remove the last two characters (2 hex)
+    // Check if pressed key is alphanumeric or one of the symbols and no modifier keys are pressed
   } else if (event.key.match(/^[\w\s@.,+!]*$/) && event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
-    // Append the encrypted hex string to the encryptedValue
+    // add the encrypted hex string to the encryptedValue
     var encryptedHex = encryptChar(event.key);
     textbox.value += encryptedHex;
     console.log('Encrypted Character:', encryptedHex);
@@ -1223,7 +1225,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.action === 'startEncryption') {
     console.log('Starting encryption');
 
-    // Listen for keydown event in textboxes for real-time encryption
+    // Listen for keydown event in textboxes 
     var textboxes = document.querySelectorAll('input[type="text"], input[type="password"]');
     console.log('Detected textboxes:', textboxes);
     textboxes.forEach(function (textbox) {
@@ -1235,8 +1237,8 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   }
 });
 
-//Decryption with SALSA
-// Content script message listener for decryption
+//DECRYPTION with SALSA
+// Content script message listener for decryption with Salsa
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.action === 'startDecryption' && !window.decryptionStarted) {
     console.log('Starting decryption...');
@@ -1248,24 +1250,27 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
       var decryptedValue = '';
       for (var i = 0; i < encryptedValue.length; i += 2) {
-        var hexByte = encryptedValue.substr(i, 2);
-        var byteValue = parseInt(hexByte, 16);
-        var encryptedUint8Array = new Uint8Array([byteValue]);
-        var startTime = performance.now(); // Record the start time
-        // Decrypt the single byte
-        var decryptedBytes = decrCipher.decrypt(encryptedUint8Array);
-        var endTime = performance.now(); // Record the end time
-        var timeTaken = endTime - startTime; // Calculate the total time taken for decryption
-        console.log('Time taken for decryption (ms):', timeTaken.toFixed(2)); // Display the time taken
+        var hexByte = encryptedValue.substr(i, 2); //extract two hex characters
 
-        // Convert decrypted byte to a UTF-8 string
+        var byteValue = parseInt(hexByte, 16);
+        var encryptedUint8Array = new Uint8Array([byteValue]); //convert and int to a Unit8Array
+        var startTime = performance.now(); // Record the start time
+
+        var decryptedBytes = decrCipher.decrypt(encryptedUint8Array); // Decrypt the single byte
+
+        var endTime = performance.now(); // Record the end time
+        var timeTaken = endTime - startTime; // Calculate the time 
+        console.log('Time taken for decryption (ms):', timeTaken.toFixed(2));
+
+        // Convert decrypted byte to a UTF-8 
         var utf8String = new TextDecoder().decode(new Uint8Array(decryptedBytes));
-        decryptedValue += utf8String;
+        decryptedValue += utf8String; // add the decrypted character to the string
       }
+
       decryptedStrings.push(decryptedValue);
     });
 
-    // Send decrypted values back to the plugin
+    // Send decrypted values back to popup.js
     console.log(decryptedStrings);
     chrome.runtime.sendMessage({
       action: 'decryptionComplete',
@@ -1275,8 +1280,8 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 });
 
 /////////////////////////////////////////////////////////////////////////////
-// DECRYPTION CTR BUTTON
-// Content script message listener for decryption
+// DECRYPTION with AES-CTR
+// Content script message listener for decryption with AES-CTR
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.action === 'startDecryptionWithCTR' && !window.decryptionStarted) {
     console.log('Starting decryption using AES CTR');
@@ -1290,16 +1295,15 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
       var decryptedValue = '';
       for (var i = 0; i < encryptedValue.length; i += 2) {
-        // Get the hex byte from the encrypted value
-        var hexByte = encryptedValue.substr(i, 2);
+        var hexByte = encryptedValue.substr(i, 2); // Get the hex from the encrypted value
         var byteValue = parseInt(hexByte, 16);
         var startTime = performance.now(); // Record the start time
 
         // Decrypt the byte using AES-CTR
         var decryptedBytes = _aesCtr.decrypt([byteValue]);
         var endTime = performance.now(); // Record the end time
-        var timeTaken = endTime - startTime; // Calculate the total time taken for decryption
-        console.log('Time taken for decryption (ms):', timeTaken.toFixed(2)); // Display the time taken
+        var timeTaken = endTime - startTime; // Calculate the time 
+        console.log('Time taken for decryption (ms):', timeTaken.toFixed(2));
 
         // Convert decrypted byte to UTF-8 character
         var decryptedChar = aes_js__WEBPACK_IMPORTED_MODULE_1___default().utils.utf8.fromBytes(decryptedBytes);
@@ -1307,7 +1311,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
       }
       decryptedValues.push(decryptedValue);
     });
-    // Send decrypted values back to the plugin
+    // Send decrypted values to popup.js
     console.log(decryptedValues);
     chrome.runtime.sendMessage({
       action: 'decryptionCompleteCTR',
@@ -1323,10 +1327,10 @@ var capturedInputs = {};
 var forms = document.querySelectorAll('form');
 //console.log(forms);
 
-// Variable to track if the user is typing for the first time
+// Variable to monitor if the user is typing for the first time
 var isTyping = false;
 
-// Function to handle key presses and store captured input
+// Function for key presses and store captured input
 function handleKeyPress(event) {
   event.preventDefault(); // Prevent the default character input
   var inputChar = event.key; // Get the pressed key
@@ -1342,15 +1346,15 @@ function handleKeyPress(event) {
   forms.forEach(function (form) {
     var _loop = function _loop() {
       var element = form.elements[index];
-      // Check if the current element is an input field and if it's the target of the current event (keypress)
+      // Check if the current element is an input field and if it is the target of the keypress event
       if (element instanceof HTMLInputElement && event.target === element) {
         var identifier = form.id + "#" + element.id;
-        typeof capturedInputs[identifier] === 'undefined' ? capturedInputs[identifier] = [] : null; // Initialize the storage array for this input field if it hasn't been created yet
+        typeof capturedInputs[identifier] === 'undefined' ? capturedInputs[identifier] = [] : null; // Initialize the storage array for this input field 
         if (inputChar !== 'Backspace') {
           capturedInputs[identifier].push(inputChar);
           console.log('Input captured and stored:', inputChar);
         } else {
-          capturedInputs[identifier].pop(); // If 'Backspace' was pressed, remove the last character from the storage array
+          capturedInputs[identifier].pop(); // remove the last character from the storage array if Backspace is pressed
         }
 
         chrome.storage.local.set({
@@ -1368,7 +1372,7 @@ function handleKeyPress(event) {
 
   // Clear the textbox value to prevent data display
   if (event.target) {
-    event.target.value = 'a';
+    event.target.value = 'a'; // add "a"
     event.target.dispatchEvent(new Event('input', {
       bubbles: true
     })); // Trigger an input event
@@ -1376,29 +1380,33 @@ function handleKeyPress(event) {
 }
 
 function uint8ArrayToBase64(uint8Array) {
-  return btoa(String.fromCharCode.apply(String, _toConsumableArray(uint8Array)));
+  return btoa(String.fromCharCode.apply(String, _toConsumableArray(uint8Array))); //encode the string into base64
 }
+
 function base64ToUint8Array(base64) {
+  //decode base64, split into an array, map each character to its char code, convert to Unit8Array
   return new Uint8Array(atob(base64).split("").map(function (_char) {
     return _char.charCodeAt(0);
   }));
 }
+
+//Method 2. Encryption with Salsa20
 function encryptSalsaMethod2() {
   chrome.storage.local.get("formsData", function (result) {
     var _formsData;
     var formsData = result.formsData;
-    var capturedTextbox1 = formsData['loginForm#username'].join('');
+    var capturedTextbox1 = formsData['loginForm#username'].join(''); //extract and join data from storage
     var capturedTextbox2 = formsData['loginForm#password'].join('');
     var startTime = performance.now(); // Start the timer
 
-    var encodedTextbox1 = new TextEncoder().encode(capturedTextbox1);
+    var encodedTextbox1 = new TextEncoder().encode(capturedTextbox1); // to utf8
     var encodedTextbox2 = new TextEncoder().encode(capturedTextbox2);
-    var encryptedTextbox1 = encrCipher.encrypt(encodedTextbox1);
+    var encryptedTextbox1 = encrCipher.encrypt(encodedTextbox1); //encrypt
     var encryptedTextbox2 = encrCipher.encrypt(encodedTextbox2);
     var endTime = performance.now(); // Stop the timer
     var timeTaken = endTime - startTime;
     console.log('Encryption Time (ms):', timeTaken.toFixed(2));
-    var encryptedTextbox1Base64 = uint8ArrayToBase64(encryptedTextbox1);
+    var encryptedTextbox1Base64 = uint8ArrayToBase64(encryptedTextbox1); //converts to base64
     var encryptedTextbox2Base64 = uint8ArrayToBase64(encryptedTextbox2);
     chrome.storage.local.set({
       formsData: (_formsData = {}, _defineProperty(_formsData, 'loginForm#username', encryptedTextbox1Base64), _defineProperty(_formsData, 'loginForm#password', encryptedTextbox2Base64), _formsData)
@@ -1412,9 +1420,9 @@ function encryptCTRMethod2() {
   chrome.storage.local.get("formsData", function (result) {
     var _formsData2;
     var formsData = result.formsData;
-    var capturedTextbox1 = formsData['loginForm#username'].join('');
+    var capturedTextbox1 = formsData['loginForm#username'].join(''); //extract and join data from storage
     var capturedTextbox2 = formsData['loginForm#password'].join('');
-    var textBytes1 = aes_js__WEBPACK_IMPORTED_MODULE_1___default().utils.utf8.toBytes(capturedTextbox1);
+    var textBytes1 = aes_js__WEBPACK_IMPORTED_MODULE_1___default().utils.utf8.toBytes(capturedTextbox1); //to utf8
     var textBytes2 = aes_js__WEBPACK_IMPORTED_MODULE_1___default().utils.utf8.toBytes(capturedTextbox2);
     var startTime = performance.now(); // Start the timer
 
@@ -1442,17 +1450,16 @@ function decryptSalsaMethod2() {
     var formsData = result.formsData;
     var encryptedTextbox1Base64 = formsData['loginForm#username'];
     var encryptedTextbox2Base64 = formsData['loginForm#password'];
-    var startTime = performance.now(); // Start the timer
+    var startTime = performance.now(); // start the timer
 
-    var encryptedTextbox1 = base64ToUint8Array(encryptedTextbox1Base64);
+    var encryptedTextbox1 = base64ToUint8Array(encryptedTextbox1Base64); //decode from base64 to Unit8Array
     var encryptedTextbox2 = base64ToUint8Array(encryptedTextbox2Base64);
-    var decryptedTextbox1 = decrCipher.decrypt(encryptedTextbox1);
+    var decryptedTextbox1 = decrCipher.decrypt(encryptedTextbox1); //decrypt
     var decryptedTextbox2 = decrCipher.decrypt(encryptedTextbox2);
-    var endTime = performance.now(); // Stop the timer
-    var timeTaken = endTime - startTime; // Calculate the time difference
-    console.log('Decryption Time (ms):', timeTaken.toFixed(2)); // Log the time taken to decrypt the data
-
-    var decryptedTextbox1String = new TextDecoder().decode(decryptedTextbox1);
+    var endTime = performance.now(); // stop the timer
+    var timeTaken = endTime - startTime; // Calculate the difference
+    console.log('Decryption Time (ms):', timeTaken.toFixed(2));
+    var decryptedTextbox1String = new TextDecoder().decode(decryptedTextbox1); // convert decrypted data back to string format
     var decryptedTextbox2String = new TextDecoder().decode(decryptedTextbox2);
     chrome.storage.local.set({
       formsData: (_formsData3 = {}, _defineProperty(_formsData3, 'loginForm#username', Array.from(decryptedTextbox1String)), _defineProperty(_formsData3, 'loginForm#password', Array.from(decryptedTextbox2String)), _formsData3)
@@ -1470,17 +1477,16 @@ function decryptCTRMethod2() {
     var encryptedTextbox2 = formsData['loginForm#password'];
     var startTime = performance.now(); // Start the timer
 
-    var encryptedBytes1 = base64ToUint8Array(encryptedTextbox1);
+    var encryptedBytes1 = base64ToUint8Array(encryptedTextbox1); //decode from base64 to Unit8Array
     var encryptedBytes2 = base64ToUint8Array(encryptedTextbox2);
     var aesCtr1 = new (aes_js__WEBPACK_IMPORTED_MODULE_1___default().ModeOfOperation).ctr(keyCTR, new (aes_js__WEBPACK_IMPORTED_MODULE_1___default().Counter)(iv));
     var aesCtr2 = new (aes_js__WEBPACK_IMPORTED_MODULE_1___default().ModeOfOperation).ctr(keyCTR, new (aes_js__WEBPACK_IMPORTED_MODULE_1___default().Counter)(iv));
     var decryptedBytes1 = aesCtr1.decrypt(encryptedBytes1);
     var decryptedBytes2 = aesCtr2.decrypt(encryptedBytes2);
-    var endTime = performance.now(); // Stop the timer
-    var timeTaken = endTime - startTime; // Calculate the time difference
-    console.log('Decryption Time (ms):', timeTaken.toFixed(2)); // Log the time taken to decrypt the data
-
-    var decryptedText1 = aes_js__WEBPACK_IMPORTED_MODULE_1___default().utils.utf8.fromBytes(decryptedBytes1);
+    var endTime = performance.now(); // stop the timer
+    var timeTaken = endTime - startTime; // salculate the difference
+    console.log('Decryption Time (ms):', timeTaken.toFixed(2));
+    var decryptedText1 = aes_js__WEBPACK_IMPORTED_MODULE_1___default().utils.utf8.fromBytes(decryptedBytes1); // convert decrypted bytes to string format
     var decryptedText2 = aes_js__WEBPACK_IMPORTED_MODULE_1___default().utils.utf8.fromBytes(decryptedBytes2);
     chrome.storage.local.set({
       formsData: (_formsData4 = {}, _defineProperty(_formsData4, 'loginForm#username', Array.from(decryptedText1)), _defineProperty(_formsData4, 'loginForm#password', Array.from(decryptedText2)), _formsData4)
@@ -1512,43 +1518,52 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // VIRTUAL KEYBOARD
-var focusedInput = null;
-var originalKeyValues = [];
+var focusedInput = null; //currently focused input field
+var originalKeyValues = []; //array to keep original values of keys
+
 document.addEventListener('focusin', function (event) {
+  //to detect when an input field is focused
   if (event.target.tagName.toLowerCase() === 'input') {
     focusedInput = event.target;
   }
 });
+
+//listen for a message from popup.js to show the keyboard
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.action === 'showKeyboard') {
     injectVirtualKeyboard();
   }
 });
+
+//function to inject virtual keyboard into the webpage
 function injectVirtualKeyboard() {
-  // Check if the virtual keyboard shadow DOM is already added to the page
+  // check if virtual keyboard in on the screen 
   if (!document.querySelector('#virtual-keyboard-container')) {
     var container = document.createElement('div');
     container.id = 'virtual-keyboard-container';
     document.body.appendChild(container);
+
+    // attach a shadow root to the container in mode:closed
     var shadow = container.attachShadow({
       mode: 'closed'
     });
 
-    // Load the virtual-keyboard.html content
+    // inject virtual-keyboard.html content in DOM shadow
     fetch(chrome.extension.getURL('virtual-keyboard.html')).then(function (response) {
       return response.text();
     }).then(function (html) {
       shadow.innerHTML = html;
-      addKeyboardClickHandlers(shadow); // Add click handlers after injecting the keyboard
-      //  preventEventPropagation(shadow); // Prevent events from propagating to the webpage
+      addKeyboardClickHandlers(shadow); // click handlers 
     });
   } else {
-    // Toggle visibility if the keyboard is already present in the page
+    // toggle visibility if the keyboard is already present in the page
     var _container = document.querySelector('#virtual-keyboard-container');
     var virtualKeyboard = _container.shadowRoot.querySelector('#virtual-keyboard');
     virtualKeyboard.style.display = virtualKeyboard.style.display === 'none' ? 'block' : 'none';
   }
 }
+
+//Fucntion to add click handlers 
 function addKeyboardClickHandlers(shadow) {
   var keys = shadow.querySelectorAll('.keyboard-key');
   keys.forEach(function (key) {
@@ -1583,12 +1598,15 @@ function addKeyboardClickHandlers(shadow) {
   });
 }
 
+//reset keys to their original values
 function resetKeyboardKeys(shadow) {
   var keys = shadow.querySelectorAll('.keyboard-key');
   keys.forEach(function (key, index) {
     key.textContent = originalKeyValues[index];
   });
 }
+
+//shuffle the order of the virtual keyboard keys
 function shuffleKeyboardKeys(shadow) {
   var rows = shadow.querySelectorAll('#virtual-keyboard .row');
   rows.forEach(function (row) {
@@ -1602,11 +1620,6 @@ function shuffleKeyboardKeys(shadow) {
   });
 }
 
-// function preventEventPropagation(shadow) {
-//   shadow.querySelector('#virtual-keyboard').addEventListener('click', function (event) {
-//     event.stopPropagation();
-//   });
-// }
 //////////////////////////////////////////////////////////////////////////////////////
 // Create a div and attach a shadow root to isolate the scripts that will be injected
 var div = document.createElement('div');
@@ -1614,13 +1627,12 @@ var shadowRoot = div.attachShadow({
   mode: "closed"
 });
 document.body.appendChild(div);
-// Create script elements for the Salsa20 and AES libraries and the injected script and append them to the shadow root
-// After the libraries are loaded, initialize the ciphers with keys and call uniqueOverrideRequests from the injected script
+// Create script elements for the Salsa20, AES libraries and injected script and add them to the shadow root
 var salsaLib = document.createElement('script');
-salsaLib.src = chrome.runtime.getURL('jssalsa20.js'); // Replace with the actual URL of the library
+salsaLib.src = chrome.runtime.getURL('jssalsa20.js');
 salsaLib.onload = function () {
   var aesLib = document.createElement('script');
-  aesLib.src = chrome.runtime.getURL('aes-js.js'); // Replace with the actual URL of the library
+  aesLib.src = chrome.runtime.getURL('aes-js.js');
   aesLib.onload = function () {
     var injected = document.createElement('script');
     injected.src = chrome.runtime.getURL('injected.js');
@@ -1629,8 +1641,11 @@ salsaLib.onload = function () {
   shadowRoot.appendChild(aesLib);
 };
 shadowRoot.appendChild(salsaLib);
+
+// initialize the ciphers with keys and call uniqueOverrideRequests from the injected script
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.action === 'toggleMethod') {
+    //listener from popup.js
     var overrideScript = document.createElement('script');
     switch (message.method) {
       case 'None':

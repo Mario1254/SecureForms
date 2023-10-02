@@ -9,18 +9,18 @@ const nonce = new Uint8Array(8); //  Uint8Array with 8 bytes (64 bits) for the n
 crypto.getRandomValues(key);
 crypto.getRandomValues(nonce);
 // instances of Salsa20 cipher for encryption and decryption
-const encrCipher = new JSSalsa20(key, nonce);
+const encrCipher = new JSSalsa20(key, nonce); // Bubelich M., 2017. Available at: https://github.com/thesimj/js-salsa20
 const decrCipher = new JSSalsa20(key, nonce);
 
 //Key and IV for AES-CTR
-const keyCTR = new Uint8Array(16); // 16 bytes (128 bits)
-//const keyCTR = new Uint8Array(32); // 32 bytes (256 bits)
+//const keyCTR = new Uint8Array(16); // 16 bytes (128 bits)
+const keyCTR = new Uint8Array(32); // 32 bytes (256 bits)
 const iv = new Uint8Array(16); // 16 bytes (128 bits)
 // random key and IV using the Web Crypto API
 crypto.getRandomValues(keyCTR);
 crypto.getRandomValues(iv);
 const counter = new aesjs.Counter(iv);
-const aesCtr = new aesjs.ModeOfOperation.ctr(keyCTR, counter); // AES-CTR mode instance
+const aesCtr = new aesjs.ModeOfOperation.ctr(keyCTR, counter); // AES-CTR mode instance // Moore R., 2018. Available at: https://github.com/ricmoo/aes-js 
 
 let encryptionMethod = 'None';
 chrome.storage.local.set({method: encryptionMethod});
@@ -35,14 +35,14 @@ function encryptChar(inputChar) {
     case 'Salsa20':  // encryption when the toggle button is on Salsa20 
       // Encode the input character to UTF-8 byte using TextEncoder
       const textEncoder = new TextEncoder();
-      const utf8Byte = textEncoder.encode(inputChar);
+      const utf8Bytes = textEncoder.encode(inputChar);
       startTime = performance.now(); // Record start time
 
-      const encryptedByte = encrCipher.encrypt(utf8Byte); //Encrypt the byte
+      const encryptedByte = encrCipher.encrypt(utf8Bytes); //Encrypt the byte
 
       endTime = performance.now(); // End timer
       timeTaken = endTime - startTime; // Calculate time  
-      console.log('Time taken for encryption (ms):', timeTaken.toFixed(8));
+      console.log('Time taken for encryption (ms):', timeTaken.toFixed(2));
 
       encryptedHex = Array.from(encryptedByte)    // Convert the encrypted bytes to a hex 
         .map(byte => byte.toString(16).padStart(2, '0'))
@@ -51,10 +51,10 @@ function encryptChar(inputChar) {
 
     case 'AES':
       // Encode the input character to UTF-8 byte
-      const inputBytes = aesjs.utils.utf8.toBytes(inputChar);
+      const inputBytes = aesjs.utils.utf8.toBytes(inputChar); // Moore R., 2018. Available at: https://github.com/ricmoo/aes-js 
       startTime = performance.now(); // Record start time
 
-      const encryptedBytes = aesCtr.encrypt(inputBytes); //Encrypt
+      const encryptedBytes = aesCtr.encrypt(inputBytes); //Encrypt the bye
 
       endTime = performance.now(); // End timer
       timeTaken = endTime - startTime; // Calculate time 
@@ -152,7 +152,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     console.log('Starting decryption using AES CTR');
 
     const counter = new aesjs.Counter(iv);
-    const aesCtr = new aesjs.ModeOfOperation.ctr(keyCTR, counter);
+    const aesCtr = new aesjs.ModeOfOperation.ctr(keyCTR, counter); // Moore R., 2018. Available at: https://github.com/ricmoo/aes-js 
 
     const textboxes = document.querySelectorAll('input[type="text"], input[type="password"]');
     const decryptedValues = []; // Array to store decrypted values
@@ -164,17 +164,17 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
       for (let i = 0; i < encryptedValue.length; i += 2) {
         const hexByte = encryptedValue.substr(i, 2);   // Get the hex from the encrypted value
         const byteValue = parseInt(hexByte, 16);
-        const startTime = performance.now(); // Record the start time
+        const startTime = performance.now(); //  start time
 
-        // Decrypt the byte using AES-CTR
+        // Decrypt the byte
         const decryptedBytes = aesCtr.decrypt([byteValue]);
 
-        const endTime = performance.now(); // Record the end time
-        const timeTaken = endTime - startTime; // Calculate the time 
+        const endTime = performance.now(); // end time
+        const timeTaken = endTime - startTime; // calculate
         console.log('Time taken for decryption (ms):', timeTaken.toFixed(2)); 
 
         // Convert decrypted byte to UTF-8 character
-        const decryptedChar = aesjs.utils.utf8.fromBytes(decryptedBytes);
+        const decryptedChar = aesjs.utils.utf8.fromBytes(decryptedBytes); // Moore R., 2018. Available at: https://github.com/ricmoo/aes-js 
         decryptedValue += decryptedChar;
       }
       decryptedValues.push(decryptedValue);
@@ -193,7 +193,7 @@ let capturedInputs = {};
 const forms = document.querySelectorAll('form');
 //console.log(forms);
 
-// Variable to monitor if the user is typing for the first time
+// to monitor if the user is typing for the first time
 let isTyping = false;
 
 // Function for key presses and store captured input
@@ -507,7 +507,8 @@ const div = document.createElement('div');
 const shadowRoot = div.attachShadow({ mode: "closed" });
 document.body.appendChild(div);
 // Create script elements for the Salsa20, AES libraries and injected script and add them to the shadow root
-const salsaLib = document.createElement('script');
+//Rob W, 2012. Stack overflow, Available at: https://stackoverflow.com/questions/9515704/access-variables-and-functions-defined-in-page-context-using-a-content-script/9517879#9517879
+const salsaLib = document.createElement('script'); 
 salsaLib.src = chrome.runtime.getURL('jssalsa20.js'); 
 salsaLib.onload = () => {
   const aesLib = document.createElement('script');
@@ -533,7 +534,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
       case 'Salsa20':
         encryptionMethod = 'Salsa20';
         const keysSalsa = {key: Array.from(key), nonce: Array.from(nonce)};
-        overrideScript.textContent = 'uniqueOverrideRequests(' + JSON.stringify(encryptionMethod) + ',' + JSON.stringify(keysSalsa) + ');';
+        overrideScript.textContent = 'uniqueOverrideRequests(' + JSON.stringify(encryptionMethod) + ',' + JSON.stringify(keysSalsa) + ');'; //Rob W, 2012. Stack overflow, Available at: https://stackoverflow.com/questions/9515704/access-variables-and-functions-defined-in-page-context-using-a-content-script/9517879#9517879
         break;
       case 'AES':
         encryptionMethod = 'AES';
